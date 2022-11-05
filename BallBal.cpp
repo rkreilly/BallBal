@@ -134,16 +134,28 @@ void PushyShovey(){
 void setup()
 {
     stdio_init_all();
+    sleep_ms(5000);
 
+    printf("1\r\n");
     irq_set_exclusive_handler(TOUCH_IRQ, TouchyFeely);
+    printf("2\r\n");
     hw_set_bits(&timer_hw->inte, 1u << TOUCH_ALARM_NUM);
+    printf("3\r\n");
     irq_set_enabled(TOUCH_IRQ, true);
+    printf("4\r\n");
     irq_set_exclusive_handler(CONTROL_IRQ, PushyShovey);
+    printf("5\r\n");
     hw_set_bits(&timer_hw->inte, 1u << CONTROL_ALARM_NUM);
+    printf("6\r\n");
     irq_set_enabled(CONTROL_IRQ, true);
+    printf("7\r\n");
     uint t = time_us_32();
+    printf("8\r\n");
     timer_hw->alarm[TOUCH_ALARM_NUM] = t + 5000;                                        // why is this different setup from next line..?
+    printf("9\r\n");
     timer_hw->alarm[CONTROL_ALARM_NUM] = time_us_32() + 2500 + CONTROL_CALLBACK_TIME;
+    printf("10\r\n");
+
 
     gpio_set_function(i2cSCLpin, GPIO_FUNC_I2C);
     gpio_set_function(i2cSDApin, GPIO_FUNC_I2C);
@@ -178,10 +190,10 @@ void setup()
     sleep_ms(1000);
     pwm_set_gpio_level(MOTORY_PIN, 6900);
     sleep_ms(1000);
-    pwm_set_gpio_level(MOTORX_PIN, 2900);
-    sleep_ms(1000);
-    pwm_set_gpio_level(MOTORY_PIN, 2900);
-    sleep_ms(1000);
+    pwm_set_gpio_level(MOTORX_PIN, 3000);
+    sleep_ms(2000);
+    pwm_set_gpio_level(MOTORY_PIN, 3000);
+    sleep_ms(2000);
     pwm_set_gpio_level(MOTORX_PIN, 4909);
     pwm_set_gpio_level(MOTORY_PIN, 4909);
     sleep_ms(1000);
