@@ -4,6 +4,14 @@
 #include <hardware/i2c.h>
 #include <hardware/pwm.h>
 #include <hardware/timer.h>
+#include <hardware/irq.h>
+
+#define TOUCH_ALARM_NUM 0
+#define TOUCH_IRQ TIMER_IRQ_0
+#define TOUCH_CALLBACK_TIME 5000
+#define CONTROL_ALARM_NUM 1
+#define CONTROL_IRQ TIMER_IRQ_0
+#define CONTROL_CALLBACK_TIME 20000
 
 #define SCRN_ADD 0b1001000      // 48 in hex, 72 in dec
 #define i2cSCLpin 1
@@ -17,42 +25,34 @@
 volatile int xLoc = 2047;
 volatile int yLoc = 2047;
 
-void setup()
-{
-    stdio_init_all();
+void TouchyFeely(){
 
-    gpio_set_function(i2cSCLpin, GPIO_FUNC_I2C);
-    gpio_set_function(i2cSDApin, GPIO_FUNC_I2C);
-    gpio_pull_up(i2cSCLpin);
-    gpio_pull_up(i2cSDApin);
-    i2c_init(i2c0, 100000);
-    
-    gpio_init(MOTORX_PIN);
-    gpio_init(MOTORY_PIN);
-    gpio_set_dir(MOTORX_PIN, false);
-    gpio_set_dir(MOTORY_PIN, false);
-    gpio_pull_down(MOTORX_PIN);
-    gpio_pull_down(MOTORY_PIN);
-    gpio_set_function(MOTORX_PIN, GPIO_FUNC_PWM);
-    gpio_set_function(MOTORY_PIN, GPIO_FUNC_PWM);
+    hw_clear_bits(&timer_hw->intr, 1u << TOUCH_ALARM_NUM);
+    timer_hw->alarm[TOUCH_ALARM_NUM] += TOUCH_CALLBACK_TIME;
 
-    uint sliceX_num = pwm_gpio_to_slice_num(MOTORX_PIN);
-    uint sliceY_num = pwm_gpio_to_slice_num(MOTORY_PIN);
-	uint chanX_num = pwm_gpio_to_channel(MOTORX_PIN);
-    uint chanY_num = pwm_gpio_to_channel(MOTORY_PIN);
-	pwm_set_clkdiv_int_frac(sliceX_num, 38, 3);
-    pwm_set_clkdiv_int_frac(sliceY_num, 38, 3);
-	pwm_set_wrap(sliceX_num, 6873);
-    pwm_set_wrap(sliceY_num, 6873);
-	pwm_set_enabled(sliceX_num, true);
-    pwm_set_enabled(sliceY_num, true);
-    pwm_set_gpio_level(MOTORX_PIN, 4909);
-    pwm_set_gpio_level(MOTORY_PIN, 4909);
-        
-    sleep_ms(1000);
+    uint8_t recData[2] = {0b00000000, 0b00000000};
+    uint8_t recData2[2] = {0b00000000, 0b00000000};
+    uint8_t sndData[1] = {0b11000100};
+    uint8_t sndData2[1] = {0b11010100};
+
+    i2c_write_blocking(i2c0, SCRN_ADD, sndData, 1, false);
+    i2c_read_blocking(i2c0, SCRN_ADD, recData, 2, false);
+    xLoc= recData[0] << 4 | recData[1] >> 4;
+
+    i2c_write_blocking(i2c0, SCRN_ADD, sndData2, 1, false);
+    i2c_read_blocking(i2c0, SCRN_ADD, recData2, 2, false);
+    yLoc= recData2[0] << 4 | recData2[1] >> 4;
+
+    // printf("X: %u\r\n", xLoc);
+    // printf("Y: %u\r\n", yLoc);
+    // printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData[0], recData[0], recData[1]);
+    // printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData2[0], recData2[0], recData2[1]);
+    // sleep_ms(200);
+
 }
 
-void motorControl(){
+
+void PushyShovey(){
 
 //MOTOR STUFF
     // so if we have 45° min/max, over a 4095 range of screen
@@ -60,8 +60,11 @@ void motorControl(){
     //  = 2.21 multiplier
     // FOR NOW, just 1:1 tau is how much we'll move the motors. 
 
+    hw_clear_bits(&timer_hw->intr, 1u << CONTROL_ALARM_NUM);
+    timer_hw->alarm[CONTROL_ALARM_NUM] += CONTROL_CALLBACK_TIME;
+
     volatile float kpx=0, kix=0, kdx=0, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047, dt=0.02;
-    volatile float kpy=0, kiy=0, kdy=0, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047,
+    volatile float kpy=0, kiy=0, kdy=0, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
 
     ex = posxDes - xLoc;
     edotx = (ex - eoldx) / dt;
@@ -128,34 +131,69 @@ void motorControl(){
 }
 
 
+void setup()
+{
+    stdio_init_all();
+
+    irq_set_exclusive_handler(TOUCH_IRQ, TouchyFeely);
+    hw_set_bits(&timer_hw->inte, 1u << TOUCH_ALARM_NUM);
+    irq_set_enabled(TOUCH_IRQ, true);
+    irq_set_exclusive_handler(CONTROL_IRQ, PushyShovey);
+    hw_set_bits(&timer_hw->inte, 1u << CONTROL_ALARM_NUM);
+    irq_set_enabled(CONTROL_IRQ, true);
+    uint t = time_us_32();
+    timer_hw->alarm[TOUCH_ALARM_NUM] = t + 5000;                                        // why is this different setup from next line..?
+    timer_hw->alarm[CONTROL_ALARM_NUM] = time_us_32() + 2500 + CONTROL_CALLBACK_TIME;
+
+    gpio_set_function(i2cSCLpin, GPIO_FUNC_I2C);
+    gpio_set_function(i2cSDApin, GPIO_FUNC_I2C);
+    gpio_pull_up(i2cSCLpin);
+    gpio_pull_up(i2cSDApin);
+    i2c_init(i2c0, 100000);
+    
+    gpio_init(MOTORX_PIN);
+    gpio_init(MOTORY_PIN);
+    gpio_set_dir(MOTORX_PIN, false);
+    gpio_set_dir(MOTORY_PIN, false);
+    gpio_pull_down(MOTORX_PIN);
+    gpio_pull_down(MOTORY_PIN);
+    gpio_set_function(MOTORX_PIN, GPIO_FUNC_PWM);
+    gpio_set_function(MOTORY_PIN, GPIO_FUNC_PWM);
+
+    uint sliceX_num = pwm_gpio_to_slice_num(MOTORX_PIN);
+    uint sliceY_num = pwm_gpio_to_slice_num(MOTORY_PIN);
+	uint chanX_num = pwm_gpio_to_channel(MOTORX_PIN);
+    uint chanY_num = pwm_gpio_to_channel(MOTORY_PIN);
+	pwm_set_clkdiv_int_frac(sliceX_num, 38, 3);
+    pwm_set_clkdiv_int_frac(sliceY_num, 38, 3);
+	pwm_set_wrap(sliceX_num, 6873);
+    pwm_set_wrap(sliceY_num, 6873);
+	pwm_set_enabled(sliceX_num, true);
+    pwm_set_enabled(sliceY_num, true);
+    pwm_set_gpio_level(MOTORX_PIN, 4909);
+    pwm_set_gpio_level(MOTORY_PIN, 4909);
+    
+    sleep_ms(1000);
+    pwm_set_gpio_level(MOTORX_PIN, 6900);
+    sleep_ms(1000);
+    pwm_set_gpio_level(MOTORY_PIN, 6900);
+    sleep_ms(1000);
+    pwm_set_gpio_level(MOTORX_PIN, 2900);
+    sleep_ms(1000);
+    pwm_set_gpio_level(MOTORY_PIN, 2900);
+    sleep_ms(1000);
+    pwm_set_gpio_level(MOTORX_PIN, 4909);
+    pwm_set_gpio_level(MOTORY_PIN, 4909);
+    sleep_ms(1000);
+}
+
+
 int loop()
 {
-
-//TOUCHSCREEN SIDE
-    
-
-    uint8_t recData[2] = {0b00000000, 0b00000000};
-    uint8_t recData2[2] = {0b00000000, 0b00000000};
-    uint8_t sndData[1] = {0b11000100};
-    uint8_t sndData2[1] = {0b11010100};
-
-    i2c_write_blocking(i2c0, SCRN_ADD, sndData, 1, false);
-    i2c_read_blocking(i2c0, SCRN_ADD, recData, 2, false);
-    xLoc= recData[0] << 4 | recData[1] >> 4;
-
-    i2c_write_blocking(i2c0, SCRN_ADD, sndData2, 1, false);
-    i2c_read_blocking(i2c0, SCRN_ADD, recData2, 2, false);
-    yLoc= recData2[0] << 4 | recData2[1] >> 4;
-
-    // printf("X: %u\r\n", xLoc);
-    // printf("Y: %u\r\n", yLoc);
-    // printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData[0], recData[0], recData[1]);
-    // printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData2[0], recData2[0], recData2[1]);
-    sleep_ms(200);
-
-    return 1;
-    
+    sleep_ms(10);
+    return 1;   
 }
+
 
 int main()
 {
@@ -163,7 +201,7 @@ int main()
     int loopcount= 0;
     while (true){
         loop();
-        if(loopcount>10){
+        if(loopcount>50){
             printf("X: %u\r\n", xLoc);
             printf("Y: %u\r\n", yLoc);
             loopcount= 0;
@@ -215,7 +253,7 @@ int main()
     TOP: 6873
     cc: (900)2945 - (2100)6873
     1/2: 4909
-    
+
 
 
 */
