@@ -25,7 +25,7 @@
 volatile int xLoc = 2047;
 volatile int yLoc = 2047;
 
-void TouchyFeely(){
+void touchyFeely(){
 
     hw_clear_bits(&timer_hw->intr, 1u << TOUCH_ALARM_NUM);
     timer_hw->alarm[TOUCH_ALARM_NUM] += TOUCH_CALLBACK_TIME;
@@ -52,7 +52,7 @@ void TouchyFeely(){
 }
 
 
-void PushyShovey(){
+void pushyShovey(){
 
 //MOTOR STUFF
     // so if we have 45° min/max, over a 4095 range of screen
@@ -137,13 +137,13 @@ void setup()
     sleep_ms(5000);
 
     printf("1\r\n");
-    irq_set_exclusive_handler(TOUCH_IRQ, TouchyFeely);
+    irq_set_exclusive_handler(TOUCH_IRQ, touchyFeely);
     printf("2\r\n");
     hw_set_bits(&timer_hw->inte, 1u << TOUCH_ALARM_NUM);
     printf("3\r\n");
     irq_set_enabled(TOUCH_IRQ, true);
     printf("4\r\n");
-    irq_set_exclusive_handler(CONTROL_IRQ, PushyShovey);
+    irq_set_exclusive_handler(CONTROL_IRQ, pushyShovey);
     printf("5\r\n");
     hw_set_bits(&timer_hw->inte, 1u << CONTROL_ALARM_NUM);
     printf("6\r\n");
