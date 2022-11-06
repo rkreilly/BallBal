@@ -10,7 +10,7 @@
 #define TOUCH_IRQ TIMER_IRQ_0
 #define TOUCH_CALLBACK_TIME 5000
 #define CONTROL_ALARM_NUM 1
-#define CONTROL_IRQ TIMER_IRQ_0
+#define CONTROL_IRQ TIMER_IRQ_1
 #define CONTROL_CALLBACK_TIME 20000
 
 #define SCRN_ADD 0b1001000      // 48 in hex, 72 in dec
@@ -24,6 +24,9 @@
 
 volatile int xLoc = 2047;
 volatile int yLoc = 2047;
+volatile float kpx=5.0, kix=0.01, kdx=1.0, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047, dt=0.02;
+volatile float kpy=5.0, kiy=0.01, kdy=1.0, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
+
 
 void touchyFeely(){
 
@@ -63,9 +66,6 @@ void pushyShovey(){
     hw_clear_bits(&timer_hw->intr, 1u << CONTROL_ALARM_NUM);
     timer_hw->alarm[CONTROL_ALARM_NUM] += CONTROL_CALLBACK_TIME;
 
-    volatile float kpx=0, kix=0, kdx=0, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047, dt=0.02;
-    volatile float kpy=0, kiy=0, kdy=0, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
-
     ex = posxDes - xLoc;
     edotx = (ex - eoldx) / dt;
     eintx += eintx + ex*dt;
@@ -92,7 +92,9 @@ void pushyShovey(){
     }
 
     // VERIFY POS/NEG compared to the screen axes!
-    
+    // add caps on motor movement to 45°
+    // set kp/kd/ki numbers to >0
+
     if(taux > 0){
         if(taux > 2047){
             taux = 2047 / 2.21;
@@ -108,7 +110,7 @@ void pushyShovey(){
         }
         pwm_set_gpio_level(MOTORX_PIN, 4909 + taux);
     }else{
-        pwm_set_gpio_level(MOTORX_PIN, 4909);
+        pwm_set_gpio_level(MOTORX_PIN, MCENT);
     }
     
     if(tauy > 0){
@@ -126,7 +128,7 @@ void pushyShovey(){
         }
         pwm_set_gpio_level(MOTORY_PIN, 4909 + tauy);
     }else{
-        pwm_set_gpio_level(MOTORY_PIN, 4909);
+        pwm_set_gpio_level(MOTORY_PIN, MCENT);
     }
 }
 
@@ -135,27 +137,6 @@ void setup()
 {
     stdio_init_all();
     sleep_ms(5000);
-
-    printf("1\r\n");
-    irq_set_exclusive_handler(TOUCH_IRQ, touchyFeely);
-    printf("2\r\n");
-    hw_set_bits(&timer_hw->inte, 1u << TOUCH_ALARM_NUM);
-    printf("3\r\n");
-    irq_set_enabled(TOUCH_IRQ, true);
-    printf("4\r\n");
-    irq_set_exclusive_handler(CONTROL_IRQ, pushyShovey);
-    printf("5\r\n");
-    hw_set_bits(&timer_hw->inte, 1u << CONTROL_ALARM_NUM);
-    printf("6\r\n");
-    irq_set_enabled(CONTROL_IRQ, true);
-    printf("7\r\n");
-    uint t = time_us_32();
-    printf("8\r\n");
-    timer_hw->alarm[TOUCH_ALARM_NUM] = t + 5000;                                        // why is this different setup from next line..?
-    printf("9\r\n");
-    timer_hw->alarm[CONTROL_ALARM_NUM] = time_us_32() + 2500 + CONTROL_CALLBACK_TIME;
-    printf("10\r\n");
-
 
     gpio_set_function(i2cSCLpin, GPIO_FUNC_I2C);
     gpio_set_function(i2cSDApin, GPIO_FUNC_I2C);
@@ -184,19 +165,30 @@ void setup()
     pwm_set_enabled(sliceY_num, true);
     pwm_set_gpio_level(MOTORX_PIN, 4909);
     pwm_set_gpio_level(MOTORY_PIN, 4909);
-    
+
     sleep_ms(1000);
-    pwm_set_gpio_level(MOTORX_PIN, 6900);
+    pwm_set_gpio_level(MOTORX_PIN, 5900);
     sleep_ms(1000);
-    pwm_set_gpio_level(MOTORY_PIN, 6900);
+    pwm_set_gpio_level(MOTORY_PIN, 5900);
     sleep_ms(1000);
-    pwm_set_gpio_level(MOTORX_PIN, 3000);
+    pwm_set_gpio_level(MOTORX_PIN, 3900);
     sleep_ms(2000);
-    pwm_set_gpio_level(MOTORY_PIN, 3000);
+    pwm_set_gpio_level(MOTORY_PIN, 3900);
     sleep_ms(2000);
     pwm_set_gpio_level(MOTORX_PIN, 4909);
     pwm_set_gpio_level(MOTORY_PIN, 4909);
     sleep_ms(1000);
+
+    irq_set_exclusive_handler(TOUCH_IRQ, touchyFeely);
+    hw_set_bits(&timer_hw->inte, 1u << TOUCH_ALARM_NUM);
+    irq_set_enabled(TOUCH_IRQ, true);
+    irq_set_exclusive_handler(CONTROL_IRQ, pushyShovey);
+    hw_set_bits(&timer_hw->inte, 1u << CONTROL_ALARM_NUM);
+    irq_set_enabled(CONTROL_IRQ, true);
+    uint t = time_us_32();
+    timer_hw->alarm[TOUCH_ALARM_NUM] = t + 5000;
+    timer_hw->alarm[CONTROL_ALARM_NUM] = t + 2500 + CONTROL_CALLBACK_TIME;
+
 }
 
 
@@ -213,7 +205,7 @@ int main()
     int loopcount= 0;
     while (true){
         loop();
-        if(loopcount>50){
+        if(loopcount>200){
             printf("X: %u\r\n", xLoc);
             printf("Y: %u\r\n", yLoc);
             loopcount= 0;
