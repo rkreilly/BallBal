@@ -24,8 +24,8 @@
 
 volatile int xLoc = 2047;
 volatile int yLoc = 2047;
-volatile float kpx=5.0, kix=0.01, kdx=1.0, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047, dt=0.02;
-volatile float kpy=5.0, kiy=0.01, kdy=1.0, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
+volatile float dt=0.02, kpx=150, kix=.8, kdx=80, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
+volatile float kpy=150, kiy=.8, kdy=80, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
 // for e=cm reading and tau=ms (cc out), try p=40, d=10, i=2
 // maybe try x400 since we're reading in pixels. 
 // or perhaps /400, who really knows. 
@@ -49,9 +49,9 @@ void touchyFeely(){
     yLoc= recData2[0] << 4 | recData2[1] >> 4;
 
     // printf("X: %u\r\n", xLoc);
-    // printf("Y: %u\r\n", yLoc);
-    // printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData[0], recData[0], recData[1]);
-    // printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData2[0], recData2[0], recData2[1]);
+     //printf("Y: %u\r\n", yLoc);
+     //printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData[0], recData[0], recData[1]);
+     //printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData2[0], recData2[0], recData2[1]);
     // sleep_ms(200);
 
 }
@@ -103,14 +103,14 @@ void pushyShovey(){
         }else{
             taux = taux / 2.21;
         }
-        pwm_set_gpio_level(MOTORX_PIN, 4909 - taux);
+        pwm_set_gpio_level(MOTORX_PIN, 4909 + taux);
     }else if(taux < 0){
         if(taux < -2047){
-            taux = -2047 / 2.21;
+            taux = 2047 / 2.21;
         }else{
             taux = taux / 2.21;
         }
-        pwm_set_gpio_level(MOTORX_PIN, 4909 + taux);
+        pwm_set_gpio_level(MOTORX_PIN, 4909 - taux);
     }else{
         pwm_set_gpio_level(MOTORX_PIN, MCENT);
     }
@@ -259,9 +259,6 @@ int main()
     TOP: 6873
     cc: (900)2945 - (2100)6873
     1/2: 4909
-
-
-
 */
 
 
@@ -272,7 +269,6 @@ int main()
     int T2= 0;
     double T=0;
     double Tf=0;
-
     uint8_t sndTemp[1] = {0b00000000};
     i2c_write_blocking(i2c0, SCRN_ADD, sndTemp, 1, false);
     i2c_read_blocking(i2c0, SCRN_ADD, recTemp, 2, false);
@@ -297,5 +293,3 @@ int main()
     // So we get 220 recTemp2[1], is 370K = 210F. at room temp. wtf. 
     // Very odd because T1 is mathing to zero, while T2 maths to ~220, even though both are
     // pulling the same values from their respective recTemp arrays... 
-
-
