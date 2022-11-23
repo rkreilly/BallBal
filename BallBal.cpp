@@ -5,6 +5,10 @@
 #include <hardware/pwm.h>
 #include <hardware/timer.h>
 #include <hardware/irq.h>
+#include <hardware/uart.h>
+
+#define btTX 0
+#define btRX 1
 
 #define TOUCH_ALARM_NUM 0
 #define TOUCH_IRQ TIMER_IRQ_0
@@ -14,8 +18,8 @@
 #define CONTROL_CALLBACK_TIME 20000
 
 #define SCRN_ADD 0b1001000      // 48 in hex, 72 in dec
-#define i2cSCLpin 1
-#define i2cSDApin 0
+#define i2cSCLpin 9
+#define i2cSDApin 8
 #define MOTORX_PIN 14
 #define MOTORY_PIN 15
 #define MMIN 3927
@@ -24,8 +28,8 @@
 
 volatile int xLoc = 2047;
 volatile int yLoc = 2047;
-volatile float dt=0.02, kpx=150, kix=.8, kdx=80, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
-volatile float kpy=150, kiy=.8, kdy=80, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
+volatile float dt=0.02, kpx=40, kix=5, kdx=15, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
+volatile float kpy=40, kiy=5, kdy=15, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
 // for e=cm reading and tau=ms (cc out), try p=40, d=10, i=2
 // maybe try x400 since we're reading in pixels. 
 // or perhaps /400, who really knows. 
@@ -37,8 +41,8 @@ void touchyFeely(){
 
     uint8_t recData[2] = {0b00000000, 0b00000000};
     uint8_t recData2[2] = {0b00000000, 0b00000000};
-    uint8_t sndData[1] = {0b11000100};
-    uint8_t sndData2[1] = {0b11010100};
+    uint8_t sndData[1] = {0b11000000};
+    uint8_t sndData2[1] = {0b11010000};
 
     i2c_write_blocking(i2c0, SCRN_ADD, sndData, 1, false);
     i2c_read_blocking(i2c0, SCRN_ADD, recData, 2, false);
@@ -70,13 +74,13 @@ void pushyShovey(){
 
     ex = posxDes - xLoc;
     edotx = (ex - eoldx) / dt;
-    eintx += eintx + ex*dt;
+    eintx += ex*dt;
     taux = kpx*ex + kdx*edotx + kix*eintx;
     eoldx = ex;
 
     ey= posyDes - yLoc;
     edoty = (ey - eoldy) / dt;
-    einty += einty + ey*dt;
+    einty += ey*dt;
     tauy = kpy*ey + kdy*edoty + kiy*einty;
     eoldy = ey;
 
@@ -133,12 +137,43 @@ void pushyShovey(){
         pwm_set_gpio_level(MOTORY_PIN, MCENT);
     }
 }
-
+ void uartFlush()
+ {
+ while(uart_is_readable_within_us(uart0,1000))
+    { 
+        char c = uart_getc(uart0);
+        printf("%c",c);
+    }
+ }
 
 void setup()
 {
     stdio_init_all();
-    sleep_ms(5000);
+
+    //sleep_ms(5000);
+    uart_init(uart0, 38400);
+    gpio_set_function(btTX, GPIO_FUNC_UART);
+    gpio_set_function(btRX, GPIO_FUNC_UART);
+//    for (int i = 0; i<10; ++i)
+//    {
+//         printf("%d",i);
+//         uart_puts(uart0, "AT\r\n");
+//         uartFlush();
+//         sleep_ms(1000);
+//    }
+   //uart_puts(uart0, "AT+ORGL\r\n");
+        //uartFlush();
+        //sleep_ms(1000);
+        // uart_puts(uart0, "AT+NAME=BallBal\r\n");
+        // uartFlush();
+        // sleep_ms(1000);
+        // uart_puts(uart0, "AT+PSWD=1111\r\n");
+        // uartFlush();
+        // sleep_ms(1000);
+        // uart_puts(uart0, "AT+UART=38400,0,0\r\n");
+        // uartFlush();
+        // sleep_ms(1000);
+   
 
     gpio_set_function(i2cSCLpin, GPIO_FUNC_I2C);
     gpio_set_function(i2cSDApin, GPIO_FUNC_I2C);
@@ -168,18 +203,18 @@ void setup()
     pwm_set_gpio_level(MOTORX_PIN, 4909);
     pwm_set_gpio_level(MOTORY_PIN, 4909);
 
-    sleep_ms(1000);
+   
     pwm_set_gpio_level(MOTORX_PIN, 5900);
-    sleep_ms(1000);
+   
     pwm_set_gpio_level(MOTORY_PIN, 5900);
-    sleep_ms(1000);
+   
     pwm_set_gpio_level(MOTORX_PIN, 3900);
-    sleep_ms(2000);
+    
     pwm_set_gpio_level(MOTORY_PIN, 3900);
-    sleep_ms(2000);
+   
     pwm_set_gpio_level(MOTORX_PIN, 4909);
     pwm_set_gpio_level(MOTORY_PIN, 4909);
-    sleep_ms(1000);
+    
 
     irq_set_exclusive_handler(TOUCH_IRQ, touchyFeely);
     hw_set_bits(&timer_hw->inte, 1u << TOUCH_ALARM_NUM);
@@ -194,27 +229,29 @@ void setup()
 }
 
 
+
 int loop()
 {
-    sleep_ms(10);
+   char c = uart_getc(uart0);
+       printf("%c", c);
     return 1;   
 }
 
 
-int main()
-{
-    setup();
+ int main()
+ {
+     setup();    
     int loopcount= 0;
-    while (true){
-        loop();
-        if(loopcount>200){
-            printf("X: %u\r\n", xLoc);
-            printf("Y: %u\r\n", yLoc);
-            loopcount= 0;
-        }
-        loopcount++;
-    }
-
+     while (true){
+         loop();
+            if(loopcount>200){
+             printf("X: %u\r\n", xLoc);
+             printf("Y: %u\r\n", yLoc);
+             loopcount= 0;
+         }
+         loopcount++;
+     }
+        
 }
 
 //Commands
