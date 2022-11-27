@@ -19,4 +19,4 @@ pico_enable_stdio_usb(BallBal 1)
 pico_enable_stdio_uart(BallBal 0)
 
 pico_add_extra_outputs(BallBal)
-target_link_libraries(BallBal pico_stdlib hardware_i2c hardware_pwm hardware_timer hardware_irq)
+target_link_libraries(BallBal pico_stdlib hardware_i2c hardware_pwm hardware_timer hardware_irq hardware_uart)
