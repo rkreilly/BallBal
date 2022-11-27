@@ -56,7 +56,6 @@ void touchyFeely(){
      //printf("Y: %u\r\n", yLoc);
      //printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData[0], recData[0], recData[1]);
      //printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData2[0], recData2[0], recData2[1]);
-    // sleep_ms(200);
 
 }
 
@@ -150,7 +149,7 @@ void setup()
 {
     stdio_init_all();
 
-    //sleep_ms(5000);
+    //sleep_ms(20000);
     uart_init(uart0, 38400);
     gpio_set_function(btTX, GPIO_FUNC_UART);
     gpio_set_function(btRX, GPIO_FUNC_UART);
@@ -164,10 +163,10 @@ void setup()
    //uart_puts(uart0, "AT+ORGL\r\n");
         //uartFlush();
         //sleep_ms(1000);
-        // uart_puts(uart0, "AT+NAME=BallBal\r\n");
+        // uart_puts(uart0, "AT+NAME=Ballin\r\n");
         // uartFlush();
         // sleep_ms(1000);
-        // uart_puts(uart0, "AT+PSWD=1111\r\n");
+        // uart_puts(uart0, "AT+PSWD=4444\r\n");
         // uartFlush();
         // sleep_ms(1000);
         // uart_puts(uart0, "AT+UART=38400,0,0\r\n");
