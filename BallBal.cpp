@@ -115,7 +115,7 @@ void pushyShovey(){
         }
         pwm_set_gpio_level(MOTORX_PIN, 4909 - taux);
     }else{
-        pwm_set_gpio_level(MOTORX_PIN, MCENT);
+        //pwm_set_gpio_level(MOTORX_PIN, MCENT);
     }
     
     if(tauy > 0){
@@ -133,7 +133,7 @@ void pushyShovey(){
         }
         pwm_set_gpio_level(MOTORY_PIN, 4909 + tauy);
     }else{
-        pwm_set_gpio_level(MOTORY_PIN, MCENT);
+        //pwm_set_gpio_level(MOTORY_PIN, MCENT);
     }
 }
  void uartFlush()
