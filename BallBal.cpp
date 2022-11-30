@@ -245,24 +245,36 @@ void setup()
 
 void loop()
 {
-   char c[4];
+
    if(uart_getc(uart0) == 'x')
    {
+    char c[4];
+    int j,k,l,m;
     c[0] = uart_getc(uart0);
     c[1] = uart_getc(uart0);
     c[2] = uart_getc(uart0);
     c[3] = uart_getc(uart0);
     uart_getc(uart0);
-    float posxDes = atoi(c);
+    j = ((int)(c[0])-48)*1000;
+    k = ((int)(c[1])-48)*100;
+    l = ((int)(c[2])-48)*10;
+    m = ((int)(c[3])-48)*1;
+    posxDes = j+k+l+m;
    }
    else if(uart_getc(uart0) == 'y')
    {
+    char c[4];
+    int j,k,l,m;
     c[0] = uart_getc(uart0);
     c[1] = uart_getc(uart0);
     c[2] = uart_getc(uart0);
     c[3] = uart_getc(uart0);
     uart_getc(uart0);
-    float posyDes = atoi(c);
+    j = ((int)(c[0])-48)*1000;
+    k = ((int)(c[1])-48)*100;
+    l = ((int)(c[2])-48)*10;
+    m = ((int)(c[3])-48)*1;
+    posyDes = j+k+l+m;
    }
    else
    {
