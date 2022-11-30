@@ -28,8 +28,8 @@
 
 volatile int xLoc = 2047;
 volatile int yLoc = 2047;
-volatile float dt=0.02, kpx=40, kix=5, kdx=15, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
-volatile float kpy=40, kiy=5, kdy=15, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
+volatile float dt=0.02, kpx=35, kix=.9, kdx=16, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
+volatile float kpy=35, kiy=.9, kdy=16, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
 // for e=cm reading and tau=ms (cc out), try p=40, d=10, i=2
 // maybe try x400 since we're reading in pixels. 
 // or perhaps /400, who really knows. 
@@ -48,14 +48,28 @@ void touchyFeely(){
     i2c_read_blocking(i2c0, SCRN_ADD, recData, 2, false);
     xLoc= recData[0] << 4 | recData[1] >> 4;
 
+    if (
+        xLoc < 1){xLoc = 2047;}
+        else {xLoc = xLoc;}
+
     i2c_write_blocking(i2c0, SCRN_ADD, sndData2, 1, false);
     i2c_read_blocking(i2c0, SCRN_ADD, recData2, 2, false);
-    yLoc= recData2[0] << 4 | recData2[1] >> 4;
+    yLoc= (recData2[0] << 4 | recData2[1] >> 4);
 
-    // printf("X: %u\r\n", xLoc);
-     //printf("Y: %u\r\n", yLoc);
+    if (
+        yLoc > 4094){yLoc = 2047;}
+        else {yLoc = yLoc;}
+
+
+   // printf("X: %u\r\n", xLoc);
+    //printf("Y: %u\r\n", yLoc);
+    
+    
+   
+    
      //printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData[0], recData[0], recData[1]);
      //printf("sndD:%b   recD1: %b   recD2: %b\r\n", sndData2[0], recData2[0], recData2[1]);
+    // sleep_ms(200);
 
 }
 
@@ -71,17 +85,18 @@ void pushyShovey(){
     hw_clear_bits(&timer_hw->intr, 1u << CONTROL_ALARM_NUM);
     timer_hw->alarm[CONTROL_ALARM_NUM] += CONTROL_CALLBACK_TIME;
 
-    ex = posxDes - xLoc;
-    edotx = (ex - eoldx) / dt;
-    eintx += ex*dt;
-    taux = kpx*ex + kdx*edotx + kix*eintx;
-    eoldx = ex;
 
-    ey= posyDes - yLoc;
-    edoty = (ey - eoldy) / dt;
-    einty += ey*dt;
-    tauy = kpy*ey + kdy*edoty + kiy*einty;
-    eoldy = ey;
+        ex = posxDes - xLoc;
+        edotx = (ex - eoldx) / dt;
+        eintx += ex*dt;
+        taux = kpx*ex + kdx*edotx + kix*eintx;
+        eoldx = ex;
+
+        ey= posyDes - yLoc;
+        edoty = (ey - eoldy) / dt;
+        einty += ey*dt;
+        tauy = kpy*ey + kdy*edoty + kiy*einty;
+        eoldy = ey;
 
     if(eintx > 511){
         eintx = 511;
@@ -136,8 +151,8 @@ void pushyShovey(){
         //pwm_set_gpio_level(MOTORY_PIN, MCENT);
     }
 }
- void uartFlush()
- {
+void uartFlush()
+{
  while(uart_is_readable_within_us(uart0,1000))
     { 
         char c = uart_getc(uart0);
@@ -148,8 +163,6 @@ void pushyShovey(){
 void setup()
 {
     stdio_init_all();
-
-    //sleep_ms(20000);
     uart_init(uart0, 38400);
     gpio_set_function(btTX, GPIO_FUNC_UART);
     gpio_set_function(btRX, GPIO_FUNC_UART);
@@ -157,16 +170,16 @@ void setup()
 //    {
 //         printf("%d",i);
 //         uart_puts(uart0, "AT\r\n");
-//         uartFlush();
+//       uartFlush();
 //         sleep_ms(1000);
 //    }
-   //uart_puts(uart0, "AT+ORGL\r\n");
-        //uartFlush();
+        //uart_puts(uart0, "AT+ORGL\r\n");
+        // uartFlush();
         //sleep_ms(1000);
-        // uart_puts(uart0, "AT+NAME=Ballin\r\n");
+        // uart_puts(uart0, "AT+NAME=BallBal\r\n");
         // uartFlush();
         // sleep_ms(1000);
-        // uart_puts(uart0, "AT+PSWD=4444\r\n");
+        // uart_puts(uart0, "AT+PSWD=1111\r\n");
         // uartFlush();
         // sleep_ms(1000);
         // uart_puts(uart0, "AT+UART=38400,0,0\r\n");
@@ -203,16 +216,16 @@ void setup()
     pwm_set_gpio_level(MOTORY_PIN, 4909);
 
    
-    pwm_set_gpio_level(MOTORX_PIN, 5900);
+    //pwm_set_gpio_level(MOTORX_PIN, 5900);
    
-    pwm_set_gpio_level(MOTORY_PIN, 5900);
+    //pwm_set_gpio_level(MOTORY_PIN, 5900);
    
-    pwm_set_gpio_level(MOTORX_PIN, 3900);
+    //pwm_set_gpio_level(MOTORX_PIN, 3900);
     
-    pwm_set_gpio_level(MOTORY_PIN, 3900);
+    //pwm_set_gpio_level(MOTORY_PIN, 3900);
    
-    pwm_set_gpio_level(MOTORX_PIN, 4909);
-    pwm_set_gpio_level(MOTORY_PIN, 4909);
+    //pwm_set_gpio_level(MOTORX_PIN, 4909);
+    //pwm_set_gpio_level(MOTORY_PIN, 4909);
     
 
     irq_set_exclusive_handler(TOUCH_IRQ, touchyFeely);
@@ -225,30 +238,53 @@ void setup()
     timer_hw->alarm[TOUCH_ALARM_NUM] = t + 5000;
     timer_hw->alarm[CONTROL_ALARM_NUM] = t + 2500 + CONTROL_CALLBACK_TIME;
 
+    sleep_ms(30000);
 }
 
 
 
-int loop()
+void loop()
 {
-   char c = uart_getc(uart0);
-       printf("%c", c);
-    return 1;   
+   char c[4];
+   if(uart_getc(uart0) == 'x')
+   {
+    c[0] = uart_getc(uart0);
+    c[1] = uart_getc(uart0);
+    c[2] = uart_getc(uart0);
+    c[3] = uart_getc(uart0);
+    uart_getc(uart0);
+    float posxDes = atoi(c);
+   }
+   else if(uart_getc(uart0) == 'y')
+   {
+    c[0] = uart_getc(uart0);
+    c[1] = uart_getc(uart0);
+    c[2] = uart_getc(uart0);
+    c[3] = uart_getc(uart0);
+    uart_getc(uart0);
+    float posyDes = atoi(c);
+   }
+   else
+   {
+        uart_getc(uart0);
+   }
+    //return 1;   
 }
 
 
- int main()
+int main()
  {
      setup();    
-    int loopcount= 0;
-     while (true){
+    //int loopcount= 0;
+     while (true)
+     {
          loop();
-            if(loopcount>200){
-             printf("X: %u\r\n", xLoc);
-             printf("Y: %u\r\n", yLoc);
-             loopcount= 0;
-         }
-         loopcount++;
+         // if(loopcount>200){
+            //  printf("X: %u\r\n", xLoc);
+             // printf("Y: %u\r\n", yLoc);
+             // loopcount= 0;
+          //}
+          //loopcount++;
      }
         
 }
