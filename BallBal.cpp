@@ -118,6 +118,11 @@ void pushyShovey(){
 	// BUT, smaller ones are left as itself, which is neg. but since we subtract in the gpio-level-set, we want tau to be pos. 
 	// So changing the tau = tau / 2.21 to add the (-).
 	
+	
+	//THE DIVISOR IS SUPPOSED TO BE 2.21 in order to change the max screen distance from center (±2047) into the ±45° pwm of ±928. 
+	// BUT, setting it to 3 makes the device less jumpy and work better, but all this does is reduce the max angle range. 
+	// Does not fix the issue where any error seems to go to max fix angle all the time. 
+	
     if(taux > 0){
         if(taux > 2047){
             taux = 2047 / 3.21;
@@ -257,7 +262,7 @@ void setup()
 
 
 
-void BluLoop()
+void bluLoop()
 {
     char input1 = uart_getc(uart0);
    if(input1 == 'X')
@@ -290,6 +295,7 @@ void BluLoop()
     m = ((int)(c[3])-48)*1;
     posyDes = j+k+l+m;
    }
+	/*  COMMENTOUT out because otherwise the X/Y set above didn't want to work, X just went to 40180 or something, Y wouldn;t change...
    else if(input1 == 'P'){
 	if(uart_getc(uart0) == 'X'){
     char c[3];
@@ -364,6 +370,7 @@ void BluLoop()
     m = ((int)(c[2])-48)*1;
     kiy = k+l+m;      
    }}
+   */
    else{
         uart_getc(uart0);
    }
@@ -376,7 +383,7 @@ int main()
     int loopcount= 0;
      while (true)
      {
-         BluLoop();
+         bluLoop();
          /* if(loopcount>200){
               printf("X: %u\r\n", xLoc);
               printf("Y: %u\r\n", yLoc);
