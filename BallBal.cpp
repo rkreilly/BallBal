@@ -114,7 +114,10 @@ void pushyShovey(){
     // VERIFY POS/NEG compared to the screen axes!
     // add caps on motor movement to 45°
     // set kp/kd/ki numbers to >0
-
+	// Think this was our issue!!!!!! : on the -taus, we're making pos in the inner if (when bigger than 2047), 
+	// BUT, smaller ones are left as itself, which is neg. but since we subtract in the gpio-level-set, we want tau to be pos. 
+	// So changing the tau = tau / 2.21 to add the (-).
+	
     if(taux > 0){
         if(taux > 2047){
             taux = 2047 / 2.21;
@@ -126,7 +129,7 @@ void pushyShovey(){
         if(taux < -2047){
             taux = 2047 / 2.21;
         }else{
-            taux = taux / 2.21;
+            taux = -taux / 2.21;
         }
         pwm_set_gpio_level(MOTORX_PIN, 4909 - taux);
     }else{
@@ -144,7 +147,7 @@ void pushyShovey(){
         if(tauy < -2047){
             tauy = 2047 / 2.21;
         }else{
-            tauy = tauy / 2.21;
+            tauy = -tauy / 2.21;
         }
         pwm_set_gpio_level(MOTORY_PIN, 4909 + tauy);
     }else{
