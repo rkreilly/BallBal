@@ -26,12 +26,13 @@
 #define MMAX 5891
 #define MCENT 4909
 
+volatile int loopcount = 0;
 volatile int xLoc = 2047;
 volatile int yLoc = 2047;
-volatile float dt=0.02, kpx=35, kix=.9, kdx=16, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
-volatile float kpy=35, kiy=.9, kdy=16, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
+volatile float dt=0.02, kpx=35, kix=1, kdx=16, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
+volatile float kpy=0, kiy=0, kdy=0, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
 // for e=cm reading and tau=ms (cc out), try p=40, d=10, i=2
-// maybe try x400 since we're reading in pixels. 
+// maybe try x400 since we're reading in pixels?
 // or perhaps /400, who really knows. 
 
 void touchyFeely(){
@@ -80,7 +81,6 @@ void pushyShovey(){
     // so if we have 45° min/max, over a 4095 range of screen
     // we'll need to convert size of tau to size of motor-screen angle somhow. ±2047u = ±45° = ±928
     //  = 2.21 multiplier
-    // FOR NOW, just 1:1 tau is how much we'll move the motors. 
 
     hw_clear_bits(&timer_hw->intr, 1u << CONTROL_ALARM_NUM);
     timer_hw->alarm[CONTROL_ALARM_NUM] += CONTROL_CALLBACK_TIME;
@@ -120,16 +120,16 @@ void pushyShovey(){
 	
     if(taux > 0){
         if(taux > 2047){
-            taux = 2047 / 2.21;
+            taux = 2047 / 3.21;
         }else{
-            taux = taux / 2.21;
+            taux = taux / 3.21;
         }
         pwm_set_gpio_level(MOTORX_PIN, 4909 + taux);
     }else if(taux < 0){
         if(taux < -2047){
-            taux = 2047 / 2.21;
+            taux = 2047 / 3.21;
         }else{
-            taux = -taux / 2.21;
+            taux = -taux / 3.21;
         }
         pwm_set_gpio_level(MOTORX_PIN, 4909 - taux);
     }else{
@@ -138,21 +138,32 @@ void pushyShovey(){
     
     if(tauy > 0){
         if(tauy > 2047){
-            tauy = 2047 / 2.21;
+            tauy = 2047 / 3.21;
         }else{
-            tauy = tauy / 2.21;
+            tauy = tauy / 3.21;
         }
         pwm_set_gpio_level(MOTORY_PIN, 4909 - tauy);
     }else if(tauy < 0){
         if(tauy < -2047){
-            tauy = 2047 / 2.21;
+            tauy = 2047 / 3.21;
         }else{
-            tauy = -tauy / 2.21;
+            tauy = -tauy / 3.21;
         }
         pwm_set_gpio_level(MOTORY_PIN, 4909 + tauy);
     }else{
         //pwm_set_gpio_level(MOTORY_PIN, MCENT);
     }
+
+          if(loopcount>30){
+              printf("X: %u\r\n", xLoc);
+              printf("Y: %u\r\n", yLoc);
+              printf("tauy: %f taux: %f posxDes: %f posyDes: %f \r\n\r\n", tauy, taux, posxDes, posyDes);
+              loopcount= 0;
+          }
+          loopcount++;
+
+
+
 }
 void uartFlush()
 {
@@ -248,8 +259,8 @@ void setup()
 
 void loop()
 {
-
-   if(uart_getc(uart0) == 'x')
+    char input1 = uart_getc(uart0);
+   if(input1 == 'X')
    {
     char c[4];
     int j,k,l,m;
@@ -264,7 +275,7 @@ void loop()
     m = ((int)(c[3])-48)*1;
     posxDes = j+k+l+m;
    }
-   else if(uart_getc(uart0) == 'y')
+   else if(input1 == 'Y')
    {
     char c[4];
     int j,k,l,m;
@@ -279,6 +290,49 @@ void loop()
     m = ((int)(c[3])-48)*1;
     posyDes = j+k+l+m;
    }
+   else if(input1 == 'P')
+   {
+    char c[3];
+    int k,l,m;
+    c[0] = uart_getc(uart0);
+    c[1] = uart_getc(uart0);
+    c[2] = uart_getc(uart0);
+    uart_getc(uart0);
+    k = ((int)(c[0])-48)*100;
+    l = ((int)(c[1])-48)*10;
+    m = ((int)(c[2])-48)*1;
+    kpx = k+l+m;
+    //kpy = k+l+m;
+   }
+   else if(input1 == 'D')
+   {
+    char c[3];
+    int k,l,m;
+    c[0] = uart_getc(uart0);
+    c[1] = uart_getc(uart0);
+    c[2] = uart_getc(uart0);
+    uart_getc(uart0);
+    k = ((int)(c[0])-48)*100;
+    l = ((int)(c[1])-48)*10;
+    m = ((int)(c[2])-48)*1;
+    kdx = k+l+m;
+    //kdy = k+l+m;
+   }
+   else if(input1 == 'I')
+   {
+    char c[3];
+    int k,l,m;
+    c[0] = uart_getc(uart0);
+    c[1] = uart_getc(uart0);
+    c[2] = uart_getc(uart0);
+    uart_getc(uart0);
+    k = ((int)(c[0])-48)*100;
+    l = ((int)(c[1])-48)*10;
+    m = ((int)(c[2])-48)*1;
+    kix = k+l+m;
+    //kiy = k+l+m;
+   }
+   
    else
    {
         uart_getc(uart0);
@@ -290,16 +344,18 @@ void loop()
 int main()
  {
      setup();    
-    //int loopcount= 0;
+    int loopcount= 0;
      while (true)
      {
          loop();
-         // if(loopcount>200){
-            //  printf("X: %u\r\n", xLoc);
-             // printf("Y: %u\r\n", yLoc);
-             // loopcount= 0;
-          //}
-          //loopcount++;
+         /* if(loopcount>200){
+              printf("X: %u\r\n", xLoc);
+              printf("Y: %u\r\n", yLoc);
+              printf("tauy: %f taux: %f posxDes: %f posyDes: %f ", tauy, taux, posxDes, posyDes);
+              loopcount= 0;
+          }
+          loopcount++;
+        */
      }
         
 }
