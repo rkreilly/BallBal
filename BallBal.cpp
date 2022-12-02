@@ -257,7 +257,7 @@ void setup()
 
 
 
-void loop()
+void BluLoop()
 {
     char input1 = uart_getc(uart0);
    if(input1 == 'X')
@@ -367,7 +367,6 @@ void loop()
    else{
         uart_getc(uart0);
    }
-    //return 1;   
 }
 
 
@@ -377,7 +376,7 @@ int main()
     int loopcount= 0;
      while (true)
      {
-         loop();
+         BluLoop();
          /* if(loopcount>200){
               printf("X: %u\r\n", xLoc);
               printf("Y: %u\r\n", yLoc);
