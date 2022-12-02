@@ -290,8 +290,8 @@ void loop()
     m = ((int)(c[3])-48)*1;
     posyDes = j+k+l+m;
    }
-   else if(input1 == 'P')
-   {
+   else if(input1 == 'P'){
+	if(uart_getc(uart0) == 'X'){
     char c[3];
     int k,l,m;
     c[0] = uart_getc(uart0);
@@ -302,10 +302,21 @@ void loop()
     l = ((int)(c[1])-48)*10;
     m = ((int)(c[2])-48)*1;
     kpx = k+l+m;
-    //kpy = k+l+m;
+	   }else{
+	char c[3];
+    int k,l,m;
+    c[0] = uart_getc(uart0);
+    c[1] = uart_getc(uart0);
+    c[2] = uart_getc(uart0);
+    uart_getc(uart0);
+    k = ((int)(c[0])-48)*100;
+    l = ((int)(c[1])-48)*10;
+    m = ((int)(c[2])-48)*1;
+    kpy = k+l+m;
    }
-   else if(input1 == 'D')
-   {
+   }
+   else if(input1 == 'D'){
+    if(uart_getc(uart0) == 'X'){
     char c[3];
     int k,l,m;
     c[0] = uart_getc(uart0);
@@ -316,10 +327,21 @@ void loop()
     l = ((int)(c[1])-48)*10;
     m = ((int)(c[2])-48)*1;
     kdx = k+l+m;
-    //kdy = k+l+m;
+    }else{
+	    char c[3];
+    int k,l,m;
+    c[0] = uart_getc(uart0);
+    c[1] = uart_getc(uart0);
+    c[2] = uart_getc(uart0);
+    uart_getc(uart0);
+    k = ((int)(c[0])-48)*100;
+    l = ((int)(c[1])-48)*10;
+    m = ((int)(c[2])-48)*1;
+    kdy = k+l+m;    
+    }
    }
-   else if(input1 == 'I')
-   {
+   else if(input1 == 'I'){
+    if(uart_getc(uart0) == 'X'){
     char c[3];
     int k,l,m;
     c[0] = uart_getc(uart0);
@@ -330,11 +352,19 @@ void loop()
     l = ((int)(c[1])-48)*10;
     m = ((int)(c[2])-48)*1;
     kix = k+l+m;
-    //kiy = k+l+m;
-   }
-   
-   else
-   {
+   }else{
+	char c[3];
+    int k,l,m;
+    c[0] = uart_getc(uart0);
+    c[1] = uart_getc(uart0);
+    c[2] = uart_getc(uart0);
+    uart_getc(uart0);
+    k = ((int)(c[0])-48)*100;
+    l = ((int)(c[1])-48)*10;
+    m = ((int)(c[2])-48)*1;
+    kiy = k+l+m;      
+   }}
+   else{
         uart_getc(uart0);
    }
     //return 1;   
