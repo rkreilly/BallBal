@@ -86,18 +86,18 @@ void pushyShovey(){
     timer_hw->alarm[CONTROL_ALARM_NUM] += CONTROL_CALLBACK_TIME;
 
 
-        ex = posxDes - xLoc;
+        ex = posxDes - xLoc + 0.0001;
         edotx = (ex - eoldx) / dt;
         eintx += ex*dt;
         taux = kpx*ex + kdx*edotx + kix*eintx;
         eoldx = ex;
 
-        ey= posyDes - yLoc;
+        ey= posyDes - yLoc + 0.0001;
         edoty = (ey - eoldy) / dt;
         einty += ey*dt;
         tauy = kpy*ey + kdy*edoty + kiy*einty;
         eoldy = ey;
-
+/*
     if(eintx > 2){
         eintx = 2;
     }
@@ -110,7 +110,7 @@ void pushyShovey(){
     if(einty < -2){
         einty = -2;
     }
-
+*/
     // VERIFY POS/NEG compared to the screen axes!
     // add caps on motor movement to 45°
     // set kp/kd/ki numbers to >0
@@ -125,16 +125,16 @@ void pushyShovey(){
 	
     if(taux > 0){
         if(taux > 2047){
-            taux = 2047 / 3.21;
+            taux = 2047 / 2.21;
         }else{
-            taux = taux / 3.21;
+            taux = taux / 2.21;
         }
         pwm_set_gpio_level(MOTORX_PIN, 4909 + taux);
     }else if(taux < 0){
         if(taux < -2047){
-            taux = 2047 / 3.21;
+            taux = 2047 / 2.21;
         }else{
-            taux = -taux / 3.21;
+            taux = -taux / 2.21;
         }
         pwm_set_gpio_level(MOTORX_PIN, 4909 - taux);
     }else{
@@ -143,16 +143,16 @@ void pushyShovey(){
     
     if(tauy > 0){
         if(tauy > 2047){
-            tauy = 2047 / 3.21;
+            tauy = 2047 / 2.21;
         }else{
-            tauy = tauy / 3.21;
+            tauy = tauy / 2.21;
         }
         pwm_set_gpio_level(MOTORY_PIN, 4909 - tauy);
     }else if(tauy < 0){
         if(tauy < -2047){
-            tauy = 2047 / 3.21;
+            tauy = 2047 / 2.21;
         }else{
-            tauy = -tauy / 3.21;
+            tauy = -tauy / 2.21;
         }
         pwm_set_gpio_level(MOTORY_PIN, 4909 + tauy);
     }else{
@@ -163,6 +163,8 @@ void pushyShovey(){
               printf("X: %u\r\n", xLoc);
               printf("Y: %u\r\n", yLoc);
               printf("tauy: %f taux: %f posxDes: %f posyDes: %f \r\n\r\n", tauy, taux, posxDes, posyDes);
+              printf("ex: %f edotx: %f eintx: %f eoldx: %f \r\n\r\n", kpx*ex, kdx*edotx, kix*eintx, eoldx);
+              printf("kpx: %f kdx: %f kix: %f\r\n\r\n", kpx, kdx, kix);
               loopcount= 0;
           }
           loopcount++;
