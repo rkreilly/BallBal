@@ -29,8 +29,8 @@
 volatile int loopcount = 0;
 volatile int xLoc = 2047;
 volatile int yLoc = 2047;
-volatile float dt=0.02, kpx=35, kix=1, kdx=20, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
-volatile float kpy=35, kiy=1, kdy=20, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
+volatile float dt=0.02, kpx=35/400, kix=1/400, kdx=20/400, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
+volatile float kpy=35/400, kiy=1/400, kdy=20/400, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
 // for e=cm reading and tau=ms (cc out), try p=40, d=10, i=2
 // maybe try x400 since we're reading in pixels?
 // or perhaps /400, who really knows. 
@@ -98,17 +98,17 @@ void pushyShovey(){
         tauy = kpy*ey + kdy*edoty + kiy*einty;
         eoldy = ey;
 
-    if(eintx > 511){
-        eintx = 511;
+    if(eintx > 2){
+        eintx = 2;
     }
-    if(eintx < -511){
-        eintx = -511;
+    if(eintx < -2){
+        eintx = -2;
     }
-    if(einty > 511){
-        einty = 511;
+    if(einty > 2){
+        einty = 2;
     }
-    if(einty < -511){
-        einty = -511;
+    if(einty < -2){
+        einty = -2;
     }
 
     // VERIFY POS/NEG compared to the screen axes!
@@ -227,8 +227,8 @@ void setup()
     uint chanY_num = pwm_gpio_to_channel(MOTORY_PIN);
 	pwm_set_clkdiv_int_frac(sliceX_num, 38, 3);
     pwm_set_clkdiv_int_frac(sliceY_num, 38, 3);
-	pwm_set_wrap(sliceX_num, 6873);
-    pwm_set_wrap(sliceY_num, 6873);
+	pwm_set_wrap(sliceX_num, 6873*5);
+    pwm_set_wrap(sliceY_num, 6873*5);
 	pwm_set_enabled(sliceX_num, true);
     pwm_set_enabled(sliceY_num, true);
     pwm_set_gpio_level(MOTORX_PIN, 4909);
