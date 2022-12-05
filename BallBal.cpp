@@ -29,8 +29,8 @@
 volatile int loopcount = 0;
 volatile int xLoc = 2047;
 volatile int yLoc = 2047;
-volatile float dt=0.02, kpx=35/400, kix=1/400, kdx=20/400, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
-volatile float kpy=35/400, kiy=1/400, kdy=20/400, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
+volatile float dt=0.02, kpx=45/40.0, kix=0/40.0, kdx=8/40.0, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=1847;
+volatile float kpy=45/40.0, kiy=0/40.0, kdy=8/40.0, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
 // for e=cm reading and tau=ms (cc out), try p=40, d=10, i=2
 // maybe try x400 since we're reading in pixels?
 // or perhaps /400, who really knows. 
@@ -297,7 +297,7 @@ void bluLoop()
     m = ((int)(c[3])-48)*1;
     posyDes = j+k+l+m;
    }
-	/*  COMMENTOUT out because otherwise the X/Y set above didn't want to work, X just went to 40180 or something, Y wouldn;t change...
+	//  COMMENTOUT out because otherwise the X/Y set above didn't want to work, X just went to 40180 or something, Y wouldn;t change...
    else if(input1 == 'P'){
 	if(uart_getc(uart0) == 'X'){
     char c[3];
@@ -309,7 +309,7 @@ void bluLoop()
     k = ((int)(c[0])-48)*100;
     l = ((int)(c[1])-48)*10;
     m = ((int)(c[2])-48)*1;
-    kpx = k+l+m;
+    kpx = (k+l+m)/40.0;
 	   }else{
 	char c[3];
     int k,l,m;
@@ -320,7 +320,7 @@ void bluLoop()
     k = ((int)(c[0])-48)*100;
     l = ((int)(c[1])-48)*10;
     m = ((int)(c[2])-48)*1;
-    kpy = k+l+m;
+    kpy = (k+l+m)/40.0;
    }
    }
    else if(input1 == 'D'){
@@ -334,7 +334,7 @@ void bluLoop()
     k = ((int)(c[0])-48)*100;
     l = ((int)(c[1])-48)*10;
     m = ((int)(c[2])-48)*1;
-    kdx = k+l+m;
+    kdx = (k+l+m)/40.0;
     }else{
 	    char c[3];
     int k,l,m;
@@ -345,7 +345,7 @@ void bluLoop()
     k = ((int)(c[0])-48)*100;
     l = ((int)(c[1])-48)*10;
     m = ((int)(c[2])-48)*1;
-    kdy = k+l+m;    
+    kdy = (k+l+m)/40.0;    
     }
    }
    else if(input1 == 'I'){
@@ -359,7 +359,7 @@ void bluLoop()
     k = ((int)(c[0])-48)*100;
     l = ((int)(c[1])-48)*10;
     m = ((int)(c[2])-48)*1;
-    kix = k+l+m;
+    kix = (k+l+m)/40.0;
    }else{
 	char c[3];
     int k,l,m;
@@ -370,9 +370,9 @@ void bluLoop()
     k = ((int)(c[0])-48)*100;
     l = ((int)(c[1])-48)*10;
     m = ((int)(c[2])-48)*1;
-    kiy = k+l+m;      
+    kiy = (k+l+m)/40.0;      
    }}
-   */
+   
    else{
         uart_getc(uart0);
    }
