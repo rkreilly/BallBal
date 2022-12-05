@@ -29,8 +29,8 @@
 volatile int loopcount = 0;
 volatile int xLoc = 2047;
 volatile int yLoc = 2047;
-volatile float dt=0.02, kpx=45/40.0, kix=0/40.0, kdx=8/40.0, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=1847;
-volatile float kpy=45/40.0, kiy=0/40.0, kdy=8/40.0, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
+volatile float dt=0.02, kpx=45/40.0, kix=8/40.0, kdx=8/40.0, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
+volatile float kpy=45/40.0, kiy=8/40.0, kdy=8/40.0, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
 // for e=cm reading and tau=ms (cc out), try p=40, d=10, i=2
 // maybe try x400 since we're reading in pixels?
 // or perhaps /400, who really knows. 
@@ -97,20 +97,20 @@ void pushyShovey(){
         einty += ey*dt;
         tauy = kpy*ey + kdy*edoty + kiy*einty;
         eoldy = ey;
-/*
-    if(eintx > 2){
-        eintx = 2;
+
+    if(eintx > 20000){
+        eintx = 20000;
     }
-    if(eintx < -2){
-        eintx = -2;
+    if(eintx < -20000){
+        eintx = -20000;
     }
-    if(einty > 2){
-        einty = 2;
+    if(einty > 20000){
+        einty = 20000;
     }
-    if(einty < -2){
-        einty = -2;
+    if(einty < -20000){
+        einty = -20000;
     }
-*/
+
     // VERIFY POS/NEG compared to the screen axes!
     // add caps on motor movement to 45°
     // set kp/kd/ki numbers to >0
