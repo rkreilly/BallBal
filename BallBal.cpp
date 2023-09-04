@@ -31,9 +31,8 @@ volatile int xLoc = 2047;
 volatile int yLoc = 2047;
 volatile float dt=0.02, kpx=45/40.0, kix=8/40.0, kdx=8/40.0, ex=0, edotx=0, eoldx=0, eintx=0, taux=0, posxDes=2047;
 volatile float kpy=45/40.0, kiy=8/40.0, kdy=8/40.0, ey=0, edoty=0, eoldy=0, einty=0, tauy=0, posyDes=2047;
-// for e=cm reading and tau=ms (cc out), try p=40, d=10, i=2
-// maybe try x400 since we're reading in pixels?
-// or perhaps /400, who really knows. 
+// for e=cm reading and tau=ms (cc out)
+
 
 void touchyFeely(){
 
